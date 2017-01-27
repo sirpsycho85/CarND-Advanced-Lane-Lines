@@ -119,4 +119,10 @@ Here's a [link to my video result][video1]
 
 ####1. Briefly discuss any problems / issues you faced in your implementation of this project.  Where will your pipeline likely fail?  What could you do to make it more robust?
 
-Here I'll talk about the approach I took, what techniques I used, what worked and why, where the pipeline might fail and how I might improve it if I were going to pursue this project further.  
+The most difficult part of issues I faced were creating the binary image, as I could choose from an endless number of combinations of thresholding techniques. I took inspiration from the course and from some classmates, and then spent time calibrating each function by tweaking thresholds until I was satisfied, and chose a simple combination of two techniques. The pipeline does have some trouble with dashed line. I could also see it failing whenever there is another line in the road that also meets my simple criteria, although a human can easily distinguish that from a real lane line. It's also very specific to the case of being in the middle of the lane - this would not effectively pick up additional lines, I don't think it's ready to handle osmething like changing lanes.
+
+One idea I can see to make it more robust is to use additional techniques to produce the binary image, and for each frame, compare several techniques and choose the one that is the "best", based on recent data, number of pixels, etc.
+
+More generally, with more time on the project I would really like to do a better job writing the actual code. I struggled with different approaches to parameterize the different algorithms, and have an inconsistent approach where sometimes I pass arguments, sometimes I rely on a global context, etc. If I was able to better encapsulate the functionality and make it easily testable, I could likely do a much better job of optimizing the pipeline as a whole. This seems like it would be a very valuable skill to learn, as it would apply to many situations where your model is made up of a combination of steps. 
+
+Another idea for this is to use machine learning approaches to learn the optimal values for all of the parameters, as long as I had an effective way to evaluate the performance, which might be tough if there isn't a large amount of data out there contianing roads labeled with lane location.
