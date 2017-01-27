@@ -43,7 +43,7 @@ Udacity provided a number of chessboard images. I detected the chessboard corner
 
 After calibrating the camera, I applied this distortion correction to the test image using the cv2.undistort() function. Two before and after calibration images are shown below:
 
-![alt text](/output_images/test4_calibration.png)
+![alt text](output_images/test4_calibration.png)
 
 ###Pipeline (single images)
 
