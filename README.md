@@ -13,14 +13,14 @@ The goals / steps of this project are the following:
 
 [//]: # (Image References)
 
-[image1]: ./output_images/test4_calibration.png "Calibration"
-[image2]: ./output_images/test4_original.jpg "Original"
-[image3]: ./output_images/test4_undistorted.jpg "Undistorted"
-[image4]: ./output_images/test4_binary.jpg "Binary"
-[image5]: ./output_images/test4_transformed.jpg "Transformed"
-[image6]: ./output_images/test4_line_pixels.jpg "Line pixels"
-[image7]: ./output_images/test4_fit_lines.jpg "Fit lines"
-[image8]: ./output_images/test4_final.jpg "Final"
+[image1]: ./output_images/calibration.png "Calibration"
+[image2]: ./output_images/test4_original.png "Original"
+[image3]: ./output_images/test4_undistorted.png "Undistorted"
+[image4]: ./output_images/test4_binary.png "Binary"
+[image5]: ./output_images/test4_transformed.png "Transformed"
+[image6]: ./output_images/test4_line_pixels.png "Line pixels"
+[image7]: ./output_images/test4_fit_lines.png "Fit lines"
+[image8]: ./output_images/test4_final.png "Final"
 [video1]: ./output_images/project_video_output.mp4 "Video"
 
 ## Code
@@ -43,7 +43,7 @@ Udacity provided a number of chessboard images. I detected the chessboard corner
 
 After calibrating the camera, I applied this distortion correction to the test image using the cv2.undistort() function. Two before and after calibration images are shown below:
 
-![alt text](output_images/test4_calibration.png)
+![alt text][image1]
 
 ###Pipeline (single images)
 
