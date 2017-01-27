@@ -13,13 +13,18 @@ The goals / steps of this project are the following:
 
 [//]: # (Image References)
 
-[image1]: ./examples/undistort_output.png "Undistorted"
-[image2]: ./test_images/test1.jpg "Road Transformed"
-[image3]: ./examples/binary_combo_example.jpg "Binary Example"
-[image4]: ./examples/warped_straight_lines.jpg "Warp Example"
-[image5]: ./examples/color_fit_lines.jpg "Fit Visual"
-[image6]: ./examples/example_output.jpg "Output"
-[video1]: ./project_video.mp4 "Video"
+[image1]: ./output_images/test4_calibration.png "Calibration"
+[image2]: ./output_images/test4_original.jpg "Original"
+[image3]: ./output_images/test4_undistorted.jpg "Undistorted"
+[image4]: ./output_images/test4_binary.jpg "Binary"
+[image5]: ./output_images/test4_transformed.jpg "Transformed"
+[image6]: ./output_images/test4_line_pixels.jpg "Line pixels"
+[image7]: ./output_images/test4_fit_lines.jpg "Fit lines"
+[image8]: ./output_images/test4_final.jpg "Final"
+[video1]: ./output_images/project_video_output.mp4 "Video"
+
+## Code
+All code is contained in the Jupyter notebook "Advanced lane lines.ipynb". I found the notebook especially useful for a project like this, where I could quickly review inline plots, a big part of this project.
 
 ## [Rubric](https://review.udacity.com/#!/rubrics/571/view) Points
 ###Here I will consider the rubric points individually and describe how I addressed each point in my implementation.  
@@ -34,69 +39,71 @@ You're reading it!
 
 ####1. Briefly state how you computed the camera matrix and distortion coefficients. Provide an example of a distortion corrected calibration image.
 
-The code for this step is contained in the first code cell of the IPython notebook located in "./examples/example.ipynb" (or in lines # through # of the file called `some_file.py`).  
+Udacity provided a number of chessboard images. I detected the chessboard corners using the cv2.findChessboardCorners() function, then used the cv2.calibrateCamera() function. The destination points were the same for all of the images, based on a chessboard directly facing the camera, a simple grid with perpendicular lines.
 
-I start by preparing "object points", which will be the (x, y, z) coordinates of the chessboard corners in the world. Here I am assuming the chessboard is fixed on the (x, y) plane at z=0, such that the object points are the same for each calibration image.  Thus, `objp` is just a replicated array of coordinates, and `objpoints` will be appended with a copy of it every time I successfully detect all chessboard corners in a test image.  `imgpoints` will be appended with the (x, y) pixel position of each of the corners in the image plane with each successful chessboard detection.  
-
-I then used the output `objpoints` and `imgpoints` to compute the camera calibration and distortion coefficients using the `cv2.calibrateCamera()` function.  I applied this distortion correction to the test image using the `cv2.undistort()` function and obtained this result: 
+After calibrating the camera, I applied this distortion correction to the test image using the cv2.undistort() function. Two before and after calibration images are shown below:
 
 ![alt text][image1]
 
 ###Pipeline (single images)
 
-####1. Provide an example of a distortion-corrected image.
-To demonstrate this step, I will describe how I apply the distortion correction to one of the test images like this one:
-![alt text][image2]
-####2. Describe how (and identify where in your code) you used color transforms, gradients or other methods to create a thresholded binary image.  Provide an example of a binary image result.
-I used a combination of color and gradient thresholds to generate a binary image (thresholding steps at lines # through # in `another_file.py`).  Here's an example of my output for this step.  (note: this is not actually from one of the test images)
+As an overview of my code, I have two global Line objects that store the state of the left and right lines. The video processing function fl_image() calls my process_wrapper() function, which is a wrapper around my pipeline that returns only the final image used for the output video. process_wrapper() calls process_movie_frame(), which returns all of the intermediate states of the pipeline too, and is used to produce the images below.
 
+For the examples below I use the 'test4' image. Here is the original image:
+![alt text][image2]
+
+####1. Provide an example of a distortion-corrected image.
+The distortion correction is again done using cv2.undistort() in my image_pipeline() function, using the calibration information that was obtained initially. The resulting image is:
 ![alt text][image3]
 
-####3. Describe how (and identify where in your code) you performed a perspective transform and provide an example of a transformed image.
+####2. Describe how (and identify where in your code) you used color transforms, gradients or other methods to create a thresholded binary image.  Provide an example of a binary image result.
+I spent probably the longest amount of time considering various techniques in isolation and combination to achieve a decent binary representation containing the line pixels. Some of the techniques that I ended up not using in the end were:
+- Thresholding the red color channel: I compared to thresholding for white and yellow colors separately and found that was more effective.
+- X and Y sobel operators, magnitude of gradient, direction of gradient on grayscaled images: I tried various thresholds and combining these but it proved less effective than applying them in a different color space.
 
-The code for my perspective transform includes a function called `warper()`, which appears in lines 1 through 8 in the file `example.py` (output_images/examples/example.py) (or, for example, in the 3rd code cell of the IPython notebook).  The `warper()` function takes as inputs an image (`img`), as well as source (`src`) and destination (`dst`) points.  I chose the hardcode the source and destination points in the following manner:
+Instead, I ended up using two techniques:
+- X and Y sobel operators on saturation channel: I transformed the image to HLS and apply tresholds on saturation. This picked up the edges around lane lines effectively.
+- Yellow and white thresholds: I transformed the image to HSV, which made it easy to pick out yellow and white thresholds by looking at the Wikipedia diagram of the HSV colorsplace.
 
-```
-src = np.float32(
-    [[(img_size[0] / 2) - 55, img_size[1] / 2 + 100],
-    [((img_size[0] / 6) - 10), img_size[1]],
-    [(img_size[0] * 5 / 6) + 60, img_size[1]],
-    [(img_size[0] / 2 + 55), img_size[1] / 2 + 100]])
-dst = np.float32(
-    [[(img_size[0] / 4), 0],
-    [(img_size[0] / 4), img_size[1]],
-    [(img_size[0] * 3 / 4), img_size[1]],
-    [(img_size[0] * 3 / 4), 0]])
-
-```
-This resulted in the following source and destination points:
-
-| Source        | Destination   | 
-|:-------------:|:-------------:| 
-| 585, 460      | 320, 0        | 
-| 203, 720      | 320, 720      |
-| 1127, 720     | 960, 720      |
-| 695, 460      | 960, 0        |
-
-I verified that my perspective transform was working as expected by drawing the `src` and `dst` points onto a test image and its warped counterpart to verify that the lines appear parallel in the warped image.
+Pixels from both of these techniques were combined into a binary image, example shown here:
 
 ![alt text][image4]
 
-####4. Describe how (and identify where in your code) you identified lane-line pixels and fit their positions with a polynomial?
+####3. Describe how (and identify where in your code) you performed a perspective transform and provide an example of a transformed image.
 
-Then I did some other stuff and fit my lane lines with a 2nd order polynomial kinda like this:
+My transformation is done in the function transform_perspective(). I played around with a few points before settling on effective source and destination points. I make use of the OpenCV functions cv2.getPerspectiveTransform and cv2.warpPerspective to get the transformation matrix and apply it, respectively.
+
+An example of the transformed image is shown here:
 
 ![alt text][image5]
 
+####4. Describe how (and identify where in your code) you identified lane-line pixels and fit their positions with a polynomial?
+
+To find pixels that belong to lane lines, I used the approach suggested in the lecture material. If you sum over the columns of the binary image, the peak values are the probably lane line centers. You can sum up columns for the lower portion of the image, then slide this window up the image and in each layer, select points with the same technique. 
+
+To make this approach a bit smarter, rather than serching over the entire width of the image to find the peak value, the previous line location is used as a clue for which region to focus on.
+
+A masking function was also used to get an initial position for the left and right lines, by obscuring the left side of the image while searching for the right line, and vice versa.
+
+An example of the line pixels selected is here:
+
+![alt text][image6]
+
+A 2nd order polynomial fit was then used to estimate the line. The numpy function polyfit() was used for this purpose. This logic is captured in my function get_lines(). The line pixels with the fit lines overlaid is shwon here:
+
+![alt text][image7]
+
 ####5. Describe how (and identify where in your code) you calculated the radius of curvature of the lane and the position of the vehicle with respect to center.
 
-I did this in lines # through # in my code in `my_other_file.py`
+The fit lines were used to calculate the radius of curvature for the lines. This was done in the function measure_curvature(). This was evaluated at the point on the line closest to the bottom of the image. I also converted from pixels to meters based on known information of the lane width and the approximate length of the road visible in the camera (30 meters).
+
+The position of the car with respect to the lane center was done in the function draw_position(). The assumption is that the camera is in the center of the car, so the center of the image can be treated as the center of the car. Then, it's just a matter of measuring how far that is from the left and right lines. This is also expressed in meters away from center.
 
 ####6. Provide an example image of your result plotted back down onto the road such that the lane area is identified clearly.
 
-I implemented this step in lines # through # in my code in `yet_another_file.py` in the function `map_lane()`.  Here is an example of my result on a test image:
+The final image that has gone through all of the above, and with the lane plotted is shown here:
 
-![alt text][image6]
+![alt text][image8]
 
 ---
 
@@ -104,7 +111,7 @@ I implemented this step in lines # through # in my code in `yet_another_file.py`
 
 ####1. Provide a link to your final video output.  Your pipeline should perform reasonably well on the entire project video (wobbly lines are ok but no catastrophic failures that would cause the car to drive off the road!).
 
-Here's a [link to my video result](./project_video.mp4)
+Here's a [link to my video result][video1]
 
 ---
 
